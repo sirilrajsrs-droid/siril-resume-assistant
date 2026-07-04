@@ -1,0 +1,400 @@
+<!-- 
+  Siril Raja S — Resume Assistant (v2, updated resume)
+  A self-contained HR-FAQ chatbot for embedding alongside a resume/portfolio.
+  Edit the ANSWERS object below to update responses (especially the two
+  marked [PERSONALIZE] — the employment-gap and compensation answers).
+-->
+<div id="srs-chatbot-root"></div>
+
+<style>
+  #srs-chatbot-root {
+    --ink: #1c2b22;
+    --paper: #f4efe1;
+    --ledger-line: #cdbfa0;
+    --forest: #123524;
+    --forest-deep: #0b2417;
+    --gold: #a9822f;
+    --gold-light: #d4af5a;
+    --stamp-red: #8c3d2e;
+    --mono: 'Courier New', Courier, monospace;
+    --serif: Georgia, 'Times New Roman', serif;
+
+    all: initial;
+    * { box-sizing: border-box; }
+    display: block;
+    font-family: var(--serif);
+    color: var(--ink);
+    max-width: 460px;
+    margin: 24px auto;
+  }
+
+  #srs-chatbot-root .srs-frame {
+    background: var(--paper);
+    border: 1px solid var(--ledger-line);
+    box-shadow: 0 2px 0 var(--ledger-line), 0 18px 40px -20px rgba(11,36,23,0.45);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #srs-chatbot-root .srs-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      rgba(157,138,94,0.18) 28px
+    );
+    opacity: 0.5;
+  }
+
+  #srs-chatbot-root .srs-header {
+    background: var(--forest);
+    color: var(--paper);
+    padding: 18px 20px 16px;
+    position: relative;
+    z-index: 1;
+    border-bottom: 3px double var(--gold-light);
+  }
+
+  #srs-chatbot-root .srs-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin: 0 0 4px;
+  }
+
+  #srs-chatbot-root .srs-title {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 2px;
+    letter-spacing: 0.01em;
+  }
+
+  #srs-chatbot-root .srs-subtitle {
+    font-size: 12px;
+    color: #d6cfb9;
+    margin: 0;
+  }
+
+  #srs-chatbot-root .srs-body {
+    position: relative;
+    z-index: 1;
+    height: 400px;
+    overflow-y: auto;
+    padding: 18px 20px;
+  }
+
+  #srs-chatbot-root .srs-msg {
+    display: flex;
+    margin-bottom: 16px;
+    animation: srs-rise 0.25s ease;
+  }
+
+  @keyframes srs-rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  #srs-chatbot-root .srs-msg.user { justify-content: flex-end; }
+
+  #srs-chatbot-root .srs-bubble {
+    max-width: 84%;
+    padding: 10px 13px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  #srs-chatbot-root .srs-msg.bot .srs-bubble {
+    background: #fffdf7;
+    border: 1px solid var(--ledger-line);
+    border-left: 3px solid var(--forest);
+    color: var(--ink);
+  }
+
+  #srs-chatbot-root .srs-msg.user .srs-bubble {
+    background: var(--forest);
+    color: var(--paper);
+    border: 1px solid var(--forest-deep);
+  }
+
+  #srs-chatbot-root .srs-stamp {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--stamp-red);
+    border: 1.5px solid var(--stamp-red);
+    padding: 1px 6px;
+    border-radius: 2px;
+    transform: rotate(-3deg);
+    margin-top: 8px;
+    opacity: 0.85;
+  }
+
+  #srs-chatbot-root .srs-quick {
+    position: relative;
+    z-index: 1;
+    padding: 10px 16px;
+    border-top: 1px solid var(--ledger-line);
+    background: rgba(255,253,247,0.6);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #srs-chatbot-root .srs-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid var(--forest);
+    color: var(--forest);
+    padding: 5px 9px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  #srs-chatbot-root .srs-chip:hover {
+    background: var(--forest);
+    color: var(--paper);
+  }
+
+  #srs-chatbot-root .srs-inputrow {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    border-top: 1px solid var(--ledger-line);
+  }
+
+  #srs-chatbot-root .srs-input {
+    flex: 1;
+    border: none;
+    background: #fffdf7;
+    padding: 12px 14px;
+    font-family: var(--serif);
+    font-size: 13.5px;
+    color: var(--ink);
+    outline: none;
+  }
+
+  #srs-chatbot-root .srs-send {
+    border: none;
+    background: var(--gold);
+    color: var(--forest-deep);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 18px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  #srs-chatbot-root .srs-send:hover { background: var(--gold-light); }
+
+  #srs-chatbot-root .srs-body::-webkit-scrollbar { width: 8px; }
+  #srs-chatbot-root .srs-body::-webkit-scrollbar-thumb {
+    background: var(--ledger-line);
+  }
+</style>
+
+<script>
+(function () {
+  const root = document.getElementById('srs-chatbot-root');
+
+  // ---------------------------------------------------------------
+  // EDIT ME: answers are keyed by topic. Each topic has trigger
+  // keywords for simple matching, plus the reply text.
+  // Two answers are marked [PERSONALIZE] — review before publishing.
+  // ---------------------------------------------------------------
+  const ANSWERS = [
+    {
+      id: 'intro',
+      keywords: ['who are you', 'about you', 'yourself', 'tell me about', 'introduce'],
+      reply: "I'm Siril Raja S, a CA Intermediate (Group I) professional with 3 years of experience in audit, accounting, taxation, compliance, and financial operations, based in Coimbatore."
+    },
+    {
+      id: 'current_role',
+      keywords: ['current role', 'current job', 'where do you work', 'present company', 'current position'],
+      reply: "I was working as an Audit Assistant at K. Kumaraswamy & Co., Chartered Accountants, in Coimbatore (January 2025 – January 2026)."
+    },
+    {
+      id: 'experience',
+      keywords: ['experience', 'how many years', 'work history', 'background'],
+      reply: "I have 3 years of experience as an Audit Assistant at K. Kumaraswamy & Co., across two stints — December 2020 to December 2022, and January 2025 to January 2026 — covering statutory and internal audits, financial reconciliations, and documentation."
+    },
+    {
+      id: 'gap',
+      // [PERSONALIZE] Update this with your actual reason for the
+      // Dec 2022 – Jan 2025 gap between the two stints at the same firm.
+      keywords: ['gap', 'break', 'employment gap', '2023', '2024', 'why did you leave', 'why did you return'],
+      reply: "Between my two stints at K. Kumaraswamy & Co., I stepped away to focus on clearing my CA Intermediate (Group I) examinations, which I completed in September 2024. I rejoined the firm in January 2025 to continue building on that audit and compliance experience."
+    },
+    {
+      id: 'achievements',
+      keywords: ['achievement', 'accomplishment', 'proud of', 'impact', 'contribution'],
+      reply: "A few I'm proud of: I identified a major accounting error in a hospital's accounting system, which helped strengthen internal financial controls. I also automated the TDS deduction and computation process for a construction firm, improving both accuracy and compliance turnaround."
+    },
+    {
+      id: 'education',
+      keywords: ['education', 'qualification', 'degree', 'ca inter', 'chartered accountant', 'b.com', 'bcom', 'college'],
+      reply: "I'm CA Intermediate (Group I) qualified through ICAI, completed in September 2024, and I hold a Bachelor of Commerce (Professional Accounting) from Dr. SNS Rajalakshmi College of Arts and Science, Coimbatore (June 2017 – September 2020)."
+    },
+    {
+      id: 'current_study',
+      keywords: ['currently studying', 'studying now', 'financial modeling', 'financial modelling', 'in progress', 'upskilling', 'learning'],
+      reply: "I'm currently pursuing a course in Financial Modelling & Financial Analysis using Excel, to strengthen my skills in forecasting, budgeting, and business analytics."
+    },
+    {
+      id: 'skills',
+      keywords: ['skills', 'good at', 'core competenc', 'strengths', 'expertise'],
+      reply: "My core competencies include financial statement analysis, financial reconciliation, general ledger review, internal and statutory audit, financial reporting and controls, GST/TDS/TCS and Income Tax compliance, and payroll, ESI & PF verification."
+    },
+    {
+      id: 'tools',
+      keywords: ['tools', 'software', 'technical skills', 'systems', 'applications', 'tally', 'excel', 'power bi', 'jamku'],
+      reply: "I work with Microsoft Excel and Power BI (for dashboards and data visualization) as my core analysis tools, along with Tally Prime, Jamku, and WeAudit for audit workflow management, plus CompuTax, CompuTDS, and CompuBal, and the Income Tax, GST, and TRACES portals for filings."
+    },
+    {
+      id: 'industries',
+      keywords: ['industries', 'sectors', 'clients', 'domain'],
+      reply: "I've supported statutory and internal audits across manufacturing, trading, automobile, healthcare, and construction sector clients."
+    },
+    {
+      id: 'p2p_o2c',
+      keywords: ['p2p', 'o2c', 'procure to pay', 'order to cash', 'matching', '2-way', '3-way', 'accounts payable', 'accounts receivable'],
+      reply: "In Procure-to-Pay, I handle invoice verification with 2-way and 3-way matching. In Order-to-Cash, I manage receivable tracking, customer account reconciliation, and financial transaction validation."
+    },
+    {
+      id: 'audit_scope',
+      keywords: ['audit', 'audit procedure', 'statutory audit', 'internal audit', 'what do you audit'],
+      reply: "My audit work covers verification of financial statements, ledgers, journal entries, bank transactions, receivables, payables, inventory, and fixed assets — along with bank, vendor, customer, ledger reconciliations and documentation to support audit conclusions."
+    },
+    {
+      id: 'compliance',
+      keywords: ['gst', 'tds', 'tcs', 'compliance', 'income tax', 'filing', 'returns', '15ca', '15cb', 'tax audit'],
+      reply: "I assist with the preparation and filing of Tax Audit Reports, GST returns, TDS returns, TCS returns, Income Tax Returns, and Form 15CA/15CB documentation, ensuring timely regulatory compliance for clients."
+    },
+    {
+      id: 'payroll',
+      keywords: ['payroll', 'esi', 'pf', 'salary computation'],
+      reply: "I conduct payroll verification and salary computation reviews, including ESI and PF verification and checks on statutory deductions and employee compliance records."
+    },
+    {
+      id: 'certifications',
+      keywords: ['certification', 'icitss', 'courses'],
+      reply: "My certifications include ICITSS – Information Technology & Orientation Programme, Advanced ICITSS – Advanced Information Technology & Management Communication Skills, and I'm currently completing a certification in Financial Modelling & Financial Analysis using Excel."
+    },
+    {
+      id: 'location',
+      keywords: ['location', 'based', 'where are you', 'city', 'relocate'],
+      reply: "I'm based in Coimbatore. Feel free to ask about my availability or willingness to relocate for the right opportunity."
+    },
+    {
+      id: 'availability',
+      keywords: ['notice period', 'availability', 'when can you join', 'joining'],
+      reply: "For specifics on notice period and joining timelines, please reach out to me directly — I'm happy to discuss based on the role."
+    },
+    {
+      id: 'salary',
+      // [PERSONALIZE] Add a real range or keep this deflection — your call.
+      keywords: ['salary', 'compensation', 'ctc', 'expected pay', 'pay expectation'],
+      reply: "I'd prefer to discuss compensation directly in conversation, once we've talked through the role and its scope. Feel free to reach out via email or LinkedIn."
+    },
+    {
+      id: 'contact',
+      keywords: ['contact', 'email', 'phone', 'linkedin', 'reach you'],
+      reply: "You can reach me at sirilrajsrs@gmail.com, by phone at +91 98436 84622, or on LinkedIn at linkedin.com/in/siril-raja."
+    },
+  ];
+
+  const FALLBACK = "That's a great question for a direct conversation — feel free to email me at sirilrajsrs@gmail.com or connect on LinkedIn, and I'll get right back to you. In the meantime, try one of the quick questions below.";
+
+  const QUICK_CHIPS = [
+    { label: 'experience', q: 'What is your experience?' },
+    { label: 'Key achievements', q: 'What are your key achievements?' },
+    { label: 'Core skills', q: 'What are your core skills?' },
+    { label: 'Tools & software', q: 'What tools do you use?' },
+    { label: 'Intro', q: 'Tell me about yourself.' },
+  ];
+
+  function findAnswer(text) {
+    const t = text.toLowerCase();
+    let best = null;
+    for (const item of ANSWERS) {
+      for (const kw of item.keywords) {
+        if (t.includes(kw)) { best = item; break; }
+      }
+      if (best) break;
+    }
+    return best ? best.reply : FALLBACK;
+  }
+
+  root.innerHTML = `
+    <div class="srs-frame">
+      <div class="srs-header">
+        <p class="srs-eyebrow">Resume Assistant — Ref. SRS/02</p>
+        <p class="srs-title">Ask about Siril Raja S</p>
+        <p class="srs-subtitle">Audit &amp; Finance Professional · CA Inter (Group I) · Coimbatore</p>
+      </div>
+      <div class="srs-body" id="srs-body"></div>
+      <div class="srs-quick" id="srs-quick"></div>
+      <div class="srs-inputrow">
+        <input class="srs-input" id="srs-input" type="text" placeholder="Type a question…" />
+        <button class="srs-send" id="srs-send">Ask</button>
+      </div>
+    </div>
+  `;
+
+  const body = root.querySelector('#srs-body');
+  const quick = root.querySelector('#srs-quick');
+  const input = root.querySelector('#srs-input');
+  const sendBtn = root.querySelector('#srs-send');
+
+  function addMessage(text, sender) {
+    const row = document.createElement('div');
+    row.className = 'srs-msg ' + sender;
+    const bubble = document.createElement('div');
+    bubble.className = 'srs-bubble';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    if (sender === 'bot') {
+      const stamp = document.createElement('div');
+      stamp.className = 'srs-stamp';
+      stamp.textContent = 'VERIFIED ✓';
+      bubble.appendChild(document.createElement('br'));
+      bubble.appendChild(stamp);
+    }
+    body.appendChild(row);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function handleAsk(text) {
+    if (!text.trim()) return;
+    addMessage(text, 'user');
+    input.value = '';
+    setTimeout(() => addMessage(findAnswer(text), 'bot'), 350);
+  }
+
+  QUICK_CHIPS.forEach(chip => {
+    const btn = document.createElement('button');
+    btn.className = 'srs-chip';
+    btn.textContent = chip.label;
+    btn.addEventListener('click', () => handleAsk(chip.q));
+    quick.appendChild(btn);
+  });
+
+  sendBtn.addEventListener('click', () => handleAsk(input.value));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleAsk(input.value);
+  });
+
+  // Opening message
+  addMessage("Welcome — I can answer common questions about Siril's experience, achievements, and skills. Try a quick question below, or type your own.", 'bot');
+})();
+</script>
